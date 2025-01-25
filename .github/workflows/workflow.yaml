@@ -31,15 +31,21 @@ jobs:
         docker build -t ${{ env.IMAGE_NAME }}:${{ github.ref_name }} .
         docker push ${{ env.IMAGE_NAME }}:${{ github.ref_name }}
 
-    - name: Set Kubernetes context to QA
+    - name: Prepare Kubernetes YAML
       if: github.ref_name == 'qa'
       run: |
-        kubectl config use-context QAS
+        sed -e "s|{{namespace}}|qa|g" -e "s|{{image}}|${{ env.IMAGE_NAME }}:${{ github.ref_name }}|g" app.yaml > app.qa.yaml
+
+    - name: Validate Kubernetes YAML
+      if: github.ref_name == 'qa'
+      run: |
+        cat app.qa.yaml  # Mostra o conteúdo final para debug
+        kubectl apply --dry-run=client -f app.qa.yaml  # Valida o arquivo antes de aplicar
 
     - name: Deploy to Kubernetes (QA)
       if: github.ref_name == 'qa'
       run: |
-        sed -e "s|{{namespace}}|qa|g" -e "s|{{image}}|${{ env.IMAGE_NAME }}:${{ github.ref_name }}|g" app.yaml | kubectl apply -f -
+        kubectl apply -f app.qa.yaml
 
     - name: Set Kubernetes context to PRD
       if: github.ref_name == 'prd'
