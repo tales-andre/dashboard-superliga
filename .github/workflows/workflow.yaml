@@ -47,7 +47,7 @@ jobs:
       # Step 7: Deploy no cluster QAS
       - name: Deploy to QAS
         env:
-          QAS_CONTEXT: minikube-qas
+          QAS_CONTEXT: qas
         run: |
           kubectl config use-context $QAS_CONTEXT
           kubectl config set-context --current --namespace=quality
@@ -59,7 +59,7 @@ jobs:
       # Step 8: Deploy no cluster PRD
       - name: Deploy to PRD
         env:
-          PRD_CONTEXT: minikube
+          PRD_CONTEXT: prd
         run: |
           kubectl config use-context $PRD_CONTEXT
           kubectl config set-context --current --namespace=production
