@@ -44,24 +44,35 @@ jobs:
         run: |
           echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
 
-      # Step 7: Deploy no cluster QAS
+      # Step 7: Substituir placeholders no app.yaml
+      - name: Replace placeholders for QAS
+        if: github.ref_name == 'qa'
+        run: |
+          sed "s|{{namespace}}|quality|g; s|{{image}}|${{ env.IMAGE_NAME }}:${{ github.ref_name }}|g" app.yaml > app-qas.yaml
+
+      - name: Replace placeholders for PRD
+        if: github.ref_name == 'prd'
+        run: |
+          sed "s|{{namespace}}|production|g; s|{{image}}|${{ env.IMAGE_NAME }}:${{ github.ref_name }}|g" app.yaml > app-prd.yaml
+
+      # Step 8: Deploy no cluster QAS
       - name: Deploy to QAS
+        if: github.ref_name == 'qa'
         env:
           QAS_CONTEXT: qas
         run: |
           kubectl config use-context $QAS_CONTEXT
           kubectl config set-context --current --namespace=quality
-          kubectl apply -f app.yaml --dry-run=client -o yaml | sed "s|{{namespace}}|quality|g; s|{{image}}|${{ env.IMAGE_NAME }}:${{ github.ref_name }}|g" | kubectl apply -f -
+          kubectl apply -f app-qas.yaml
           kubectl rollout status deployment/superliga-dashboard -n quality
 
-      # Step 8: Deploy no cluster PRD
+      # Step 9: Deploy no cluster PRD
       - name: Deploy to PRD
+        if: github.ref_name == 'prd'
         env:
           PRD_CONTEXT: prd
         run: |
           kubectl config use-context $PRD_CONTEXT
           kubectl config set-context --current --namespace=production
-          kubectl apply -f app.yaml --dry-run=client -o yaml | \
-          sed "s|{{namespace}}|production|g; s|{{image}}|${{ env.IMAGE_NAME }}:${{ github.ref_name }}|g" | \
-          kubectl apply -f -
+          kubectl apply -f app-prd.yaml
           kubectl rollout status deployment/superliga-dashboard -n production
