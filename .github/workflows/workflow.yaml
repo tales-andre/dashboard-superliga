@@ -14,7 +14,7 @@ jobs:
 
     env:
       # Ajuste para o seu repositório Docker Hub
-      IMAGE_NAME: your-dockerhub-username/superliga-dashboard
+      IMAGE_NAME: talesvalcacer/superliga-dashboard
 
     steps:
       - name: Check out the repository
