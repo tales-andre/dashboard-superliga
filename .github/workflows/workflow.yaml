@@ -12,12 +12,16 @@ jobs:
     # Se quiser rodar em runner próprio (self-hosted) no Windows, use:
     runs-on: self-hosted
 
+
+    steps:
     env:
-      # Ajuste para o seu repositório Docker Hub
       IMAGE_NAME: talesvalcacer/superliga-dashboard
 
     steps:
-      - name: Check out the repository
+      - name: Mark directory as safe
+        run: git config --global --add safe.directory C:/Users/tales/actions-runner/_work/dashboard-superliga/dashboard-superliga
+
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Log in to Docker Hub
@@ -28,18 +32,15 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          # Tag da imagem vai ser de acordo com a branch
-          # Por exemplo: your-dockerhub-username/superliga-dashboard:qa
-          # ou :prd, ou :main
-          docker build -t $IMAGE_NAME:${{ github.ref_name }} .
-          docker push $IMAGE_NAME:${{ github.ref_name }}
+          docker build -t ${{ env.IMAGE_NAME }}:${{ github.ref_name }} .
+          docker push ${{ env.IMAGE_NAME }}:${{ github.ref_name }}
 
       - name: Set Kubernetes context
         run: |
           # Ajuste conforme o nome do contexto configurado no seu kubeconfig.
           # Se você tiver um único cluster local, talvez seja apenas "default" 
           # ou "minikube" ou algo que você tenha definido.
-          kubectl config use-context minikube
+          kubectl config use-context QAS
 
       - name: Prepare K8s manifest
         id: prepare_manifest
