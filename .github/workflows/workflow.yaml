@@ -2,8 +2,7 @@ name: CI/CD Pipeline with Docker and Kubernetes
 
 on:
   push:
-    branches:
-      - ["qa", "prd"]
+    branches: [ "qa", "prd" ]  
 
 jobs:
   deploy:
