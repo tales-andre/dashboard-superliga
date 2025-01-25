@@ -10,15 +10,13 @@ jobs:
   build-and-deploy:
     runs-on: self-hosted  # Agora usa o runner self-hosted
 
-    steps:
-    - name: Mark directory as safe
-      run: git config --global --add safe.directory C:/Users/tales/actions-runner/_work/dashboard-superliga/dashboard-superliga
-
-
     env:
       IMAGE_NAME: talesvalcacer/superliga-dashboard
 
     steps:
+    - name: Mark directory as safe
+      run: git config --global --add safe.directory C:/Users/tales/actions-runner/_work/dashboard-superliga/dashboard-superliga
+
     - name: Checkout code
       uses: actions/checkout@v3
 
