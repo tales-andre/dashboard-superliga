@@ -2,24 +2,20 @@ name: Build and Deploy
 
 on:
   push:
-    branches: [ "main", "qa", "prd" ]
+    branches: [ "qa", "prd" ]  # Ajustado para apenas as branches qa e prd
 
 jobs:
   build_and_deploy:
-    # Se você quiser rodar em runner do GitHub, use:
-    # runs-on: ubuntu-latest
-    
-    # Se quiser rodar em runner próprio (self-hosted) no Windows, use:
-    runs-on: self-hosted
-    
+    runs-on: self-hosted  # Runner self-hosted no Windows
+
     env:
       IMAGE_NAME: talesvalcacer/superliga-dashboard
 
     steps:
-      - name: Mark directory as safe
+      - name: Marcar diretório como seguro
         run: git config --global --add safe.directory C:/Users/tales/actions-runner/_work/dashboard-superliga/dashboard-superliga
 
-      - name: Checkout code
+      - name: Checkout do código
         uses: actions/checkout@v3
 
       - name: Log in to Docker Hub
@@ -33,27 +29,63 @@ jobs:
           docker build -t ${{ env.IMAGE_NAME }}:${{ github.ref_name }} .
           docker push ${{ env.IMAGE_NAME }}:${{ github.ref_name }}
 
-      - name: Set Kubernetes context
-        run: |
-          # Ajuste conforme o nome do contexto configurado no seu kubeconfig.
-          # Se você tiver um único cluster local, talvez seja apenas "default" 
-          # ou "minikube" ou algo que você tenha definido.
-          kubectl config use-context QAS
+      - name: Configurar kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
 
-      - name: Prepare K8s manifest
-        id: prepare_manifest
+      - name: Configurar kubeconfig
         run: |
-          # Substitui {{namespace}} e {{image}}
-          sed -e "s|{{namespace}}|${{ github.ref_name }}|g" \
-              -e "s|{{image}}|$IMAGE_NAME:${{ github.ref_name }}|g" \
-              app.yaml > app.final.yaml
+          # Substitua abaixo com o método que você usa para fornecer o kubeconfig
+          # Por exemplo, você pode armazenar o kubeconfig como um secret e escrever no arquivo
+          echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
 
-      - name: Validate manifest
+      # ==========
+      # Etapas para QA
+      # ==========
+      - name: Preparar manifesto para QA
+        if: github.ref_name == 'qa'
+        shell: pwsh
         run: |
-          echo "======= Conteúdo do app.final.yaml ======="
-          cat app.final.yaml
-          kubectl apply --dry-run=client -f app.final.yaml
+          (Get-Content .\app.yaml) -replace '\{\{namespace\}\}', 'qa' `
+                                    -replace '\{\{image\}\}', "${env:IMAGE_NAME}:qa" | 
+                                    Set-Content .\app.qa.yaml
 
-      - name: Deploy
+      - name: Validar manifesto para QA
+        if: github.ref_name == 'qa'
+        shell: pwsh
         run: |
-          kubectl apply -f app.final.yaml
+          Write-Output "======= Conteúdo do app.qa.yaml ======="
+          Get-Content .\app.qa.yaml
+          kubectl apply --dry-run=client -f .\app.qa.yaml
+
+      - name: Deploy para Kubernetes (QA)
+        if: github.ref_name == 'qa'
+        shell: pwsh
+        run: |
+          kubectl apply -f .\app.qa.yaml
+
+      # ==========
+      # Etapas para PRD
+      # ==========
+      - name: Preparar manifesto para PRD
+        if: github.ref_name == 'prd'
+        shell: pwsh
+        run: |
+          (Get-Content .\app.yaml) -replace '\{\{namespace\}\}', 'prd' `
+                                    -replace '\{\{image\}\}', "${env:IMAGE_NAME}:prd" | 
+                                    Set-Content .\app.prd.yaml
+
+      - name: Validar manifesto para PRD
+        if: github.ref_name == 'prd'
+        shell: pwsh
+        run: |
+          Write-Output "======= Conteúdo do app.prd.yaml ======="
+          Get-Content .\app.prd.yaml
+          kubectl apply --dry-run=client -f .\app.prd.yaml
+
+      - name: Deploy para Kubernetes (PRD)
+        if: github.ref_name == 'prd'
+        shell: pwsh
+        run: |
+          kubectl apply -f .\app.prd.yaml
