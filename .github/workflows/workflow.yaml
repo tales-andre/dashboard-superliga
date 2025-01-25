@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted  # Agora usa o runner self-hosted
 
     env:
       IMAGE_NAME: talesvalcacer/superliga-dashboard
@@ -28,23 +28,20 @@ jobs:
         docker build -t ${{ env.IMAGE_NAME }}:${{ github.ref_name }} .
         docker push ${{ env.IMAGE_NAME }}:${{ github.ref_name }}
 
-    - name: Set up kubectl
-      uses: azure/setup-kubectl@v3
-      with:
-        version: 'v1.30.0'
-
-    - name: Configure kubeconfig for QA
+    - name: Set Kubernetes context to QA
       if: github.ref_name == 'qa'
-      run: echo "${{ secrets.KUBECONFIG_QA }}" > ~/.kube/config
-
-    - name: Configure kubeconfig for PRD
-      if: github.ref_name == 'prd'
-      run: echo "${{ secrets.KUBECONFIG_PRD }}" > ~/.kube/config
+      run: |
+        kubectl config use-context QAS
 
     - name: Deploy to Kubernetes (QA)
       if: github.ref_name == 'qa'
       run: |
         sed -e "s|{{namespace}}|qa|g" -e "s|{{image}}|${{ env.IMAGE_NAME }}:${{ github.ref_name }}|g" app.yaml | kubectl apply -f -
+
+    - name: Set Kubernetes context to PRD
+      if: github.ref_name == 'prd'
+      run: |
+        kubectl config use-context AWS-TEST
 
     - name: Deploy to Kubernetes (PRD)
       if: github.ref_name == 'prd'
