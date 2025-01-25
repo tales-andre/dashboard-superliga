@@ -48,12 +48,12 @@ jobs:
       - name: Replace placeholders for QAS
         if: github.ref_name == 'qa'
         run: |
-          sed "s|{{namespace}}|quality|g; s|{{image}}|${{ env.IMAGE_NAME }}:${{ github.ref_name }}|g" app.yaml > app-qas.yaml
+          sed "s|{{namespace}}|quality|g; s|{{image}}|${{ env.IMAGE_NAME }}:${{ github.ref_name }}|g; s|{{nodePort}}|30001|g" app.yaml > app-qas.yaml
 
       - name: Replace placeholders for PRD
         if: github.ref_name == 'prd'
         run: |
-          sed "s|{{namespace}}|production|g; s|{{image}}|${{ env.IMAGE_NAME }}:${{ github.ref_name }}|g" app.yaml > app-prd.yaml
+          sed "s|{{namespace}}|production|g; s|{{image}}|${{ env.IMAGE_NAME }}:${{ github.ref_name }}|g; s|{{nodePort}}|30002|g" app.yaml > app-prd.yaml
 
       # Step 8: Deploy no cluster QAS
       - name: Deploy to QAS
