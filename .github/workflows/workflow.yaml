@@ -11,9 +11,7 @@ jobs:
     
     # Se quiser rodar em runner próprio (self-hosted) no Windows, use:
     runs-on: self-hosted
-
-
-    steps:
+    
     env:
       IMAGE_NAME: talesvalcacer/superliga-dashboard
 
