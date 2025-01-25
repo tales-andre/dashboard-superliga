@@ -51,9 +51,7 @@ jobs:
         run: |
           kubectl config use-context $QAS_CONTEXT
           kubectl config set-context --current --namespace=quality
-          kubectl apply -f app.yaml --dry-run=client -o yaml | \
-          sed "s|{{namespace}}|quality|g; s|{{image}}|${{ env.IMAGE_NAME }}:${{ github.ref_name }}|g" | \
-          kubectl apply -f -
+          kubectl apply -f app.yaml --dry-run=client -o yaml | sed "s|{{namespace}}|quality|g; s|{{image}}|${{ env.IMAGE_NAME }}:${{ github.ref_name }}|g" | kubectl apply -f -
           kubectl rollout status deployment/superliga-dashboard -n quality
 
       # Step 8: Deploy no cluster PRD
