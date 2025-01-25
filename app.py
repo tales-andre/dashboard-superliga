@@ -4,7 +4,7 @@ app = Flask(__name__)
 
 # Dados fictícios da Superliga de Vôlei
 dados_superliga = [
-    {"time": "Sada Cruzeirso", "vitorias": 20, "derrotas": 2},
+    {"time": "Sada Cruzeirso", "vitdorias": 20, "derrotas": 2},
     {"time": "Taubaté", "vitorias": 18, "derrotas": 4},
     {"time": "Flamengo", "vitorias": 15, "derrotas": 7},
     {"time": "Minas Tênis Clube", "vitorias": 12, "derrotas": 10}
