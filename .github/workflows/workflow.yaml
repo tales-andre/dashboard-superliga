@@ -14,45 +14,58 @@ jobs:
       IMAGE_NAME: talesvalcacer/superliga-dashboard
 
     steps:
-    - name: Mark directory as safe
-      run: git config --global --add safe.directory C:/Users/tales/actions-runner/_work/dashboard-superliga/dashboard-superliga
+      - name: Mark directory as safe
+        run: git config --global --add safe.directory C:/Users/tales/actions-runner/_work/dashboard-superliga/dashboard-superliga
 
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Log in to Docker Hub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Build and push Docker image
-      run: |
-        docker build -t ${{ env.IMAGE_NAME }}:${{ github.ref_name }} .
-        docker push ${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+      - name: Build and push Docker image
+        run: |
+          docker build -t ${{ env.IMAGE_NAME }}:${{ github.ref_name }} .
+          docker push ${{ env.IMAGE_NAME }}:${{ github.ref_name }}
 
-    - name: Prepare Kubernetes YAML
-      if: github.ref_name == 'qa'
-      run: |
-        sed -e "s|{{namespace}}|qa|g" -e "s|{{image}}|${{ env.IMAGE_NAME }}:${{ github.ref_name }}|g" app.yaml > app.qa.yaml
+      # ==========
+      # Etapas QA
+      # ==========
+      - name: Set Kubernetes context for QA
+        if: github.ref_name == 'qa'
+        run: |
+          kubectl config use-context QAS
 
-    - name: Validate Kubernetes YAML
-      if: github.ref_name == 'qa'
-      run: |
-        cat app.qa.yaml  # Mostra o conteúdo final para debug
-        kubectl apply --dry-run=client -f app.qa.yaml  # Valida o arquivo antes de aplicar
+      - name: Prepare Kubernetes YAML for QA
+        if: github.ref_name == 'qa'
+        run: |
+          sed -e "s|{{namespace}}|qa|g" -e "s|{{image}}|${{ env.IMAGE_NAME }}:${{ github.ref_name }}|g" app.yaml > app.qa.yaml
 
-    - name: Deploy to Kubernetes (QA)
-      if: github.ref_name == 'qa'
-      run: |
-        kubectl apply -f app.qa.yaml
+      - name: Validate Kubernetes YAML for QA
+        if: github.ref_name == 'qa'
+        run: |
+          echo "Conteúdo do arquivo app.qa.yaml:"
+          cat app.qa.yaml
+          kubectl apply --dry-run=client -f app.qa.yaml
 
-    - name: Set Kubernetes context to PRD
-      if: github.ref_name == 'prd'
-      run: |
-        kubectl config use-context AWS-TEST
+      - name: Deploy to Kubernetes (QA)
+        if: github.ref_name == 'qa'
+        run: |
+          kubectl apply -f app.qa.yaml
 
-    - name: Deploy to Kubernetes (PRD)
-      if: github.ref_name == 'prd'
-      run: |
-        sed -e "s|{{namespace}}|prd|g" -e "s|{{image}}|${{ env.IMAGE_NAME }}:${{ github.ref_name }}|g" app.yaml | kubectl apply -f -
+      # ==========
+      # Etapas PRD
+      # ==========
+      - name: Set Kubernetes context to PRD
+        if: github.ref_name == 'prd'
+        run: |
+          kubectl config use-context AWS-TESTE
+
+      - name: Deploy to Kubernetes (PRD)
+        if: github.ref_name == 'prd'
+        run: |
+          sed -e "s|{{namespace}}|prd|g" \
+              -e "s|{{image}}|${{ env.IMAGE_NAME }}:${{ github.ref_name }}|g" app.yaml | kubectl apply -f -
