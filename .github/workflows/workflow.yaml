@@ -34,12 +34,6 @@ jobs:
         with:
           version: 'latest'
 
-      - name: Configurar kubeconfig
-        run: |
-          # Substitua abaixo com o método que você usa para fornecer o kubeconfig
-          # Por exemplo, você pode armazenar o kubeconfig como um secret e escrever no arquivo
-          echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
-
       # ==========
       # Etapas para QA
       # ==========
