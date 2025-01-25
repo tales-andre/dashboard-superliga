@@ -4,7 +4,7 @@ metadata:
   name: superliga-dashboard
   namespace: {{namespace}}
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: superliga-dashboard
@@ -14,7 +14,7 @@ spec:
         app: superliga-dashboard
     spec:
       containers:
-      - name: superliga-dashboard
-        image: {{image}}
-        ports:
-        - containerPort: 5000
+        - name: superliga-dashboard
+          image: {{image}}
+          ports:
+            - containerPort: 5000
