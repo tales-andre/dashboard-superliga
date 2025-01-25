@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Superliga de Vôlei - Dashboard</title>
+</head>
+<body>
+    <h1>Superliga de Vôlei - Temporada 2023/2024</h1>
+    <table border="1">
+        <tr>
+            <th>Time</th>
+            <th>Vitórias</th>
+            <th>Derrotas</th>
+        </tr>
+        {% for time in dados %}
+        <tr>
+            <td>{{ time.time }}</td>
+            <td>{{ time.vitorias }}</td>
+            <td>{{ time.derrotas }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
