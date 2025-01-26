@@ -73,7 +73,7 @@ jobs:
         env:
           PRD_CONTEXT: prd
         run: |
-          kubectl config use-context $PRD_CONTEXT
+          kubectl config use-context prd
           kubectl config set-context --current --namespace=production
           kubectl apply -f app-prd.yaml
           kubectl rollout restart deployment/superliga-dashboard -n production
