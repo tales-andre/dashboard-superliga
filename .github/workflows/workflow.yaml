@@ -64,6 +64,7 @@ jobs:
           kubectl config use-context $QAS_CONTEXT
           kubectl config set-context --current --namespace=quality
           kubectl apply -f app-qas.yaml
+          kubectl rollout restart deployment/superliga-dashboard -n quality
           kubectl rollout status deployment/superliga-dashboard -n quality
 
       # Step 9: Deploy no cluster PRD
@@ -75,4 +76,5 @@ jobs:
           kubectl config use-context $PRD_CONTEXT
           kubectl config set-context --current --namespace=production
           kubectl apply -f app-prd.yaml
+          kubectl rollout restart deployment/superliga-dashboard -n production
           kubectl rollout status deployment/superliga-dashboard -n production
